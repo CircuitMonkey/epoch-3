@@ -14453,9 +14453,9 @@
 		(at 85.09 44.45 0)
 		(unit 1)
 		(exclude_from_sim no)
-		(in_bom yes)
+		(in_bom no)
 		(on_board yes)
-		(dnp no)
+		(dnp yes)
 		(uuid "66fdd314-ac0e-49bb-a821-48064c25529e")
 		(property "Reference" "J7"
 			(at 83.82 39.37 0)
