@@ -6,7 +6,7 @@
 	(paper "A4")
 	(title_block
 		(title "Epoch 3 - Main Board")
-		(date "2026-02-15")
+		(date "2026-02-19")
 		(rev "A")
 		(company "by Circuit Monkey")
 		(comment 1 "Haptic Field Emitter")
