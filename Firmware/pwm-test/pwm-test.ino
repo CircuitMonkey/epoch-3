@@ -26,7 +26,7 @@ void setup() {
 void loop() {
   // Drive each PWM in a 'wave'
   for (uint16_t i=0; i<4096; i += 8) {
-    for (uint8_t pwmnum=0; pwmnum < 16; pwmnum++) {
+    for (uint8_t pwmnum=0; pwmnum < 10 ; pwmnum++) {
       pwm.setPWM(pwmnum, 0, (i + (4096/16)*pwmnum) % 4096 );
     }
   }
