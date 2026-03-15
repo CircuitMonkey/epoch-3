@@ -32,16 +32,14 @@ TFT_eSprite spr = TFT_eSprite(&tft);                      // Declare Sprite obje
 
 boolean wastouched = false;
 boolean istouched = false;
+uint32_t scanTime = millis();
 
 void setup() {
   Serial.begin(115200);
   Serial.println("\n\nEpoch 3 Startup...");
   spr.setColorDepth(1);
 
-  pwm.begin();
-  pwm.setOscillatorFrequency(27000000);  // See Adafruit PWM examples for details.
-  pwm.setPWMFreq(60);                    // This is the PWM frequency. Low for motor driving.
-  Wire.setClock(400000);                 // Fast 400kHz. Lower value if issues.
+  pwmInit();
 
   tft.init();
   tft.setRotation(0);  // Epoch 3 is portriat mode.
@@ -51,23 +49,16 @@ void setup() {
   tft.setTouch(calData);
 
   Serial.println("\nsplash");
-  //showSplashScreen();
-  //delay(3000);
+  showSplashScreen();
+  delay(1000);
   
   Serial.println("\nmainpage");
   mainPageInit();
 }
 
 void loop() {
-
-  // Example: Set PWM channel value. 0-4096 == 0-100 percent.
-  //pwm.setPWM(pwmnum, 0, (i + (4096/16)*pwmnum) % 4096 );
-
-  // Get Touch.
-  // Handle Touch.
-
-
   mainPageLoop();
+  pwmLoop();
 }
 
 void showSplashScreen() {

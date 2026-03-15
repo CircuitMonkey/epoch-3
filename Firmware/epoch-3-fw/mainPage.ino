@@ -118,6 +118,7 @@ void mainPageInit() {
   tft.drawRoundRect(x, y, w, h, SLIDER_OUTER_CORNER, THEME_COLOR_LITE);
 
   updateSliderPositions();
+  pwmInitMode(mode);
 
   // PLay/Pause toggle button
   updatePlayPauseButton();
@@ -160,7 +161,6 @@ void mainPageLoop() {
 
       // Mode selection
       if (modeSelectTouch(t_x, t_y)) {
-        Serial.println("Mode Changed");
         updateModeButtons();
       }
 
@@ -224,20 +224,20 @@ void drawLargeButton(uint16_t x, uint16_t y, const unsigned char *glyph) {
 }
 
 void updateModeButtons() {
-  // Two rows of glyph buttons
-  drawSmallButton(MODE_COL_1_X, MODE_ROW_1_Y, mode == MODE_UP_DOWN ? THEME_COLOR_LITE : THEME_COLOR_DARK, upDown);
-  drawSmallButton(MODE_COL_2_X, MODE_ROW_1_Y, mode == MODE_DOWN ? THEME_COLOR_LITE : THEME_COLOR_DARK, down);
-  drawSmallButton(MODE_COL_3_X, MODE_ROW_1_Y, mode == MODE_UP ? THEME_COLOR_LITE : THEME_COLOR_DARK, up);
-  drawSmallButton(MODE_COL_4_X, MODE_ROW_1_Y, mode == MODE_RANDOM ? THEME_COLOR_LITE : THEME_COLOR_DARK, dice);
+    // Two rows of glyph buttons
+    drawSmallButton(MODE_COL_1_X, MODE_ROW_1_Y, mode == MODE_UP_DOWN ? THEME_COLOR_LITE : THEME_COLOR_DARK, upDown);
+    drawSmallButton(MODE_COL_2_X, MODE_ROW_1_Y, mode == MODE_DOWN ? THEME_COLOR_LITE : THEME_COLOR_DARK, down);
+    drawSmallButton(MODE_COL_3_X, MODE_ROW_1_Y, mode == MODE_UP ? THEME_COLOR_LITE : THEME_COLOR_DARK, up);
+    drawSmallButton(MODE_COL_4_X, MODE_ROW_1_Y, mode == MODE_RANDOM ? THEME_COLOR_LITE : THEME_COLOR_DARK, dice);
 
-  drawSmallButton(MODE_COL_1_X, MODE_ROW_2_Y, mode == MODE_DOT_UP_DOWN ? THEME_COLOR_LITE : THEME_COLOR_DARK, dotUpDown);
-  drawSmallButton(MODE_COL_2_X, MODE_ROW_2_Y, mode == MODE_DOT_DOWN ? THEME_COLOR_LITE : THEME_COLOR_DARK, dotDown);
-  drawSmallButton(MODE_COL_3_X, MODE_ROW_2_Y, mode == MODE_DOT_UP ? THEME_COLOR_LITE : THEME_COLOR_DARK, dotUp);
-  drawSmallButton(MODE_COL_4_X, MODE_ROW_2_Y, mode == MODE_AST ? THEME_COLOR_LITE : THEME_COLOR_DARK, asterisk);
+    drawSmallButton(MODE_COL_1_X, MODE_ROW_2_Y, mode == MODE_DOT_UP_DOWN ? THEME_COLOR_LITE : THEME_COLOR_DARK, dotUpDown);
+    drawSmallButton(MODE_COL_2_X, MODE_ROW_2_Y, mode == MODE_DOT_DOWN ? THEME_COLOR_LITE : THEME_COLOR_DARK, dotDown);
+    drawSmallButton(MODE_COL_3_X, MODE_ROW_2_Y, mode == MODE_DOT_UP ? THEME_COLOR_LITE : THEME_COLOR_DARK, dotUp);
+    drawSmallButton(MODE_COL_4_X, MODE_ROW_2_Y, mode == MODE_AST ? THEME_COLOR_LITE : THEME_COLOR_DARK, asterisk);
 }
 
 void updatePlayPauseButton() {
-  drawLargeButton(PLAY_PAUSE_X, PLAY_PAUSE_Y, run ? play : pause);
+  drawLargeButton(PLAY_PAUSE_X, PLAY_PAUSE_Y, run ? pause : play);
 }
 
 void updateHammerButton() {
@@ -300,6 +300,8 @@ boolean modeSelectTouch(uint16_t x, uint16_t y) {
 
   if ( changed ) {
     updateSliderPositions();
+    pwmInitMode(mode);
+    Serial.printf("Mode Changed: %d\n", mode);
   }
 
   return changed;
