@@ -6102,6 +6102,19 @@
 		)
 		(uuid 93c29e3c-ee02-4e38-b83a-58af140792f9)
 	)
+	(text "REV B: TFT MISO/MOSI Swapped! J6.6 <-> J6.9.   TOUCH OK. "
+		(exclude_from_sim no)
+		(at 106.68 17.78 0)
+		(effects
+			(font
+				(size 2.032 2.032)
+				(thickness 0.4064)
+				(bold yes)
+				(color 255 0 0 1)
+			)
+		)
+		(uuid "0f53bd33-9aa8-46cc-a9e0-341303bac7bf")
+	)
 	(text "Diode On Pico2"
 		(exclude_from_sim no)
 		(at 50.8 134.62 0)
@@ -6112,6 +6125,19 @@
 			)
 		)
 		(uuid "1a97b754-89d7-4bdf-9d47-b909a16bc023")
+	)
+	(text "J6 PCB Orientation 180 deg."
+		(exclude_from_sim no)
+		(at 181.61 36.83 90)
+		(effects
+			(font
+				(size 2.032 2.032)
+				(thickness 0.4064)
+				(bold yes)
+				(color 255 0 0 1)
+			)
+		)
+		(uuid "b1bf3d91-324f-4e8e-985e-176e43de79aa")
 	)
 	(junction
 		(at 229.87 120.65)
