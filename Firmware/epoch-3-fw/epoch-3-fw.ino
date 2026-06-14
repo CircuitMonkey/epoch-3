@@ -3,6 +3,9 @@
  with touch screen by Mark J. Koch.
         https://www.patreon.com/maehem
 
+
+  Choose RPi Pico2 as target processor in Arduino
+
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
 
   MIT license
