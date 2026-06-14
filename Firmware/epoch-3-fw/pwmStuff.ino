@@ -1,5 +1,11 @@
 
+#define PWM_TICK_MIN 48
+#define PWM_TICK_MIN_TRIM 64
+
 #define PWM_TICK_MAX 143
+#define PWM_TICK_MAX_456 120
+#define PWM_TICK_MAX_TRIM 128
+#define PWM_TICK_MAX_TRIM_456 108
 #define FWD true
 #define REV false
 #define SLOW_SPEED 16
@@ -8,8 +14,17 @@
 // Tick 188 wraps around to 0.
 int16_t pwmTick = 0;
 uint8_t tickStart = 0;
+uint8_t tickEnd = PWM_TICK_MAX;
 int16_t waitTicks = 0; // Set to slider 4 value when end reached.
 boolean tickDir = FWD;  // Forward
+
+/*
+
+ TODO: trimTime ...  tick back forth end points are in by TRIM amount 24?
+
+Do we slow down tick rate so it maches non-trm mode rate? use speed var?
+
+*/
 
 
 void pwmInit() {
@@ -19,48 +34,72 @@ void pwmInit() {
   Wire.setClock(400000);                 // Fast 400kHz. Lower value if issues.
 }
 
+void updateMinMax(uint8_t mode) {
+  switch (mode) {
+    case 0:
+    case 1:
+    case 2:
+      tickStart = trimTime?PWM_TICK_MIN_TRIM:PWM_TICK_MIN;
+      tickEnd = trimTime?PWM_TICK_MAX_TRIM:PWM_TICK_MAX;
+      break;
+    case 3:           // Don't care
+      tickStart = PWM_TICK_MIN;
+      tickEnd = PWM_TICK_MAX;
+      break;
+    case 4:
+    case 5:
+    case 6:
+      tickStart = trimTime?PWM_TICK_MIN_TRIM:PWM_TICK_MIN;
+      tickEnd = trimTime?PWM_TICK_MAX_TRIM_456:PWM_TICK_MAX_456;
+      break;
+    case 7:           // Don't care
+      tickStart = PWM_TICK_MIN;
+      tickEnd = PWM_TICK_MAX;
+      break;
+  }
+}
+
 void pwmInitMode(uint8_t mode) {
+  updateMinMax(mode);
+
   switch (mode) {
     case 0:
     case 1:
       tickDir = FWD;  // Forward
-      tickStart = 48;
       pwmTick = tickStart;
       break;
     case 2:
       tickDir = REV;  // Reverse
-      tickStart = 48;
-      pwmTick = PWM_TICK_MAX;
+      pwmTick = tickEnd;
       break;
     case 3: // Don't care
       tickDir = FWD;  // Forward
-      tickStart = 48;
       pwmTick = tickStart;
       break;
     case 4:
     case 5:
       tickDir = FWD;  // Forward
-      tickStart = 48;
       pwmTick = tickStart;
       break;
     case 6:
       tickDir = REV;  // Reverse
-      tickStart = 48;
-      pwmTick = PWM_TICK_MAX;
+      pwmTick = tickEnd;
       break;
     case 7: // Don't care
       tickDir = FWD;  // Forward
-      tickStart = 48;
       pwmTick = tickStart;
       break;
   }
 }
+
 
 static const uint8_t wave[] = {  // Single peak
   0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
   0, 0, 2, 4, 8, 12, 20, 30, 40, 56, 72, 90, 110, 130, 150, 170, 190, 208, 224, 236, 244, 249, 253, 255, 255, 253, 249, 244, 236, 224, 208, 190, 170, 150, 130, 110, 90, 72, 56, 40, 30, 20, 12, 8, 4, 2, 0, 0,
   0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
 };
+
+// depricated.  not very good.
 static const uint8_t dot[] = {  // Dot/Ripple
   0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
   0, 0, 2, 4, 8, 12, 20, 30, 40, 56, 90, 130, 170, 190, 224, 236, 244, 253, 255, 220, 180, 180, 220, 255, 255, 220, 180, 180, 220, 255, 253, 244, 236, 224, 190, 170, 130, 90, 56, 40, 30, 20, 12, 8, 4, 2, 0, 0,
@@ -91,7 +130,7 @@ void pwmLoop() {
         case 0:                // down/up
         case 1:
         case 2:
-            processTick( wave );
+            processTick( 0, wave );
             break;
         case 3:  // Random
                 // Speed slider controls transition (motor old value to motor new value) time
@@ -105,7 +144,7 @@ void pwmLoop() {
         case 4:
         case 5:
         case 6:
-            processTick(dot);
+            processTick(1, wave);
             break;
         case 7:  // Asterisk (motors on, no pattern)
             // Test. Use for asterisk mode.
@@ -128,15 +167,18 @@ void pwmLoop() {
             break;
         }
 
+        // If user changed TRIM mode, let's adjust to it.
+        updateMinMax(mode);
+
         if (mode == 0 || mode == 4) {  // Mode 0 and 4 go back and forth
             if (tickDir) {               // If going forward
                 pwmTick++;
                 if ( speed > SLOW_SPEED ) {
                     pwmTick++;
                 }
-                if (pwmTick > PWM_TICK_MAX) {
+                if (pwmTick > tickEnd) {
                     //Serial.println("Mode 0/4 FWD end reached.");
-                    pwmTick = PWM_TICK_MAX;
+                    pwmTick = tickEnd;
                     tickDir = REV;  // Flip Direction
                     waitTicks = getWait();
                 }
@@ -157,7 +199,7 @@ void pwmLoop() {
         } else {  // One direction. tickDir never changes.
             if (tickDir) {
                 pwmTick++;
-                if (pwmTick > PWM_TICK_MAX) {
+                if (pwmTick > tickEnd) {
                     //Serial.println("Mode 3/7 FWD end reached.");
                     pwmTick = tickStart;  // Reset to zero
                     waitTicks = getWait();
@@ -166,7 +208,7 @@ void pwmLoop() {
                 pwmTick--;
                 if (pwmTick < tickStart) {
                     //Serial.println("Mode 3/7 REV end reached.");
-                    pwmTick = PWM_TICK_MAX;  // Reset to MAX
+                    pwmTick = tickEnd;  // Reset to MAX
                     waitTicks = getWait();
                 }
             }
@@ -177,7 +219,11 @@ void pwmLoop() {
 
 }
 
-void processTick(const uint8_t* wave) {
+/*
+ * style:  0: wave on all channels.
+ *          1: wave on ch 1,2,3.  Constant on ch 4,5.
+*/
+void processTick(int style, const uint8_t* wave) {
     uint16_t intensity;  // 0-99
     uint32_t val;        // 0-4095
     int32_t idx;         // Phase shifted mode index.
@@ -186,6 +232,7 @@ void processTick(const uint8_t* wave) {
 
     // Tip
     intensity = sliderValue[mode][0];  // Slider 0 for motors 1,2
+    idx = pwmTick;
     val = getWaveVal(wave, pwmTick) * 16 * intensity / 100;
     pwm.setPWM(0, 0, (uint16_t)val);  // Range of 0-4095 == 0-99%
     pwm.setPWM(1, 0, (uint16_t)val);  // Range of 0-4095 == 0-99%
@@ -204,17 +251,28 @@ void processTick(const uint8_t* wave) {
     pwm.setPWM(5, 0, (uint16_t)val);         // Range of 0-4095 == 0-99%
 
     // Balls
-    intensity = sliderValue[mode][2];  // Slider 3 for motors 6,7,8,9
-    idx = pwmTick - 36;
-    val = getWaveVal(wave, idx) * 16 * intensity / 100;  // 0-4095
-    pwm.setPWM(6, 0, (uint16_t)val);         // Range of 0-4095 == 0-99%
-    pwm.setPWM(7, 0, (uint16_t)val);         // Range of 0-4095 == 0-99%
+    switch( style ) {
+        case 0:
+            intensity = sliderValue[mode][2];  // Slider 3 for motors 6,7,8,9
+            idx = pwmTick - 36;
+            val = getWaveVal(wave, idx) * 16 * intensity / 100;  // 0-4095
+            pwm.setPWM(6, 0, (uint16_t)val);         // Range of 0-4095 == 0-99%
+            pwm.setPWM(7, 0, (uint16_t)val);         // Range of 0-4095 == 0-99%
 
-    // Plug
-    idx = pwmTick - 48;
-    val = getWaveVal(wave, idx) * 16 * intensity / 100;  // 0-4095
-    pwm.setPWM(8, 0, (uint16_t)val);         // Range of 0-4095 == 0-99%
-    pwm.setPWM(9, 0, (uint16_t)val);         // Range of 0-4095 == 0-99%
+            // Plug
+            idx = pwmTick - 48;
+            val = getWaveVal(wave, idx) * 16 * intensity / 100;  // 0-4095
+            pwm.setPWM(8, 0, (uint16_t)val);         // Range of 0-4095 == 0-99%
+            pwm.setPWM(9, 0, (uint16_t)val);         // Range of 0-4095 == 0-99%
+            break;
+        case 1:
+            // Third slider. Four motors at rear. Ch: 07 + 08 + 09 + 10
+            pwm.setPWM(6, 0, 135 + sliderValue[mode][2] * 40);  // Range of 0-4095 == 0-99%
+            pwm.setPWM(7, 0, 135 + sliderValue[mode][2] * 40);  // Range of 0-4095 == 0-99%
+            pwm.setPWM(8, 0, 135 + sliderValue[mode][2] * 40);  // Range of 0-4095 == 0-99%
+            pwm.setPWM(9, 0, 135 + sliderValue[mode][2] * 40);  // Range of 0-4095 == 0-99%
+            break;
+    }
 }
 
 uint8_t getWait() {
