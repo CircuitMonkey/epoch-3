@@ -36,6 +36,7 @@
 
 #define HAMMER_X 250
 #define HAMMER_Y 400
+#define TRIM_X 184
 
 
 TFT_eSprite knob = TFT_eSprite(&tft);         // Sprite for the slide knob
@@ -60,6 +61,7 @@ uint8_t mode = MODE_UP_DOWN;
 uint8_t run = 0;
 boolean drag = false;
 boolean hammerTime = false;
+boolean trimTime = false;
 
 void mainPageInit() {
   // Slider slot parameters
@@ -124,6 +126,7 @@ void mainPageInit() {
   updatePlayPauseButton();
 
   updateHammerButton();
+  updateTrimButton();
 }
 
 void mainPageLoop() {
@@ -175,13 +178,24 @@ void mainPageLoop() {
       }
 
       // Hammer Time toggle
-      if (!drag && hammerSelectTouch(t_x, t_y)) {
+      if (!drag && isSmallTouched(t_x, t_y, HAMMER_X, HAMMER_Y)) {
         if (hammerTime) {
           hammerTime = false;
         } else {
           hammerTime = true;
         }
         updateHammerButton();
+      }
+      // Trim Time toggle
+      if (!drag && isSmallTouched(t_x, t_y, TRIM_X, HAMMER_Y)) {
+//        if (trimTime) {
+//          trimTime = false;
+//        } else {
+//          trimTime = true;
+//        }
+        trimTime = !trimTime;
+
+        updateTrimButton();
       }
 
       drag = true;
@@ -242,6 +256,9 @@ void updatePlayPauseButton() {
 
 void updateHammerButton() {
   drawSmallButton(HAMMER_X, HAMMER_Y, hammerTime ? THEME_COLOR_LITE : THEME_COLOR_DARK, hammer);
+}
+void updateTrimButton() {
+  drawSmallButton(TRIM_X, HAMMER_Y, trimTime ? THEME_COLOR_LITE : THEME_COLOR_DARK, trim);
 }
 
 /**
@@ -325,6 +342,14 @@ boolean hammerSelectTouch(uint16_t x, uint16_t y) {
     }
   }
   return changed;
+}
+boolean isSmallTouched(uint16_t x, uint16_t y, uint16_t btnX, uint16_t btnY) {
+  if (y > btnY && y < btnY + BUTTON_SM_SIZE) {
+    if (x > btnX && x < btnX + BUTTON_SM_SIZE) {
+      return true;
+    }
+  }
+  return false;
 }
 
 void updateSliderPositions() {
