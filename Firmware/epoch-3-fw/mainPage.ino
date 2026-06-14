@@ -237,7 +237,7 @@ void updateModeButtons() {
 }
 
 void updatePlayPauseButton() {
-  drawLargeButton(PLAY_PAUSE_X, PLAY_PAUSE_Y, run ? pause : play);
+  drawLargeButton(PLAY_PAUSE_X, PLAY_PAUSE_Y, run ? pause_glyph : play);
 }
 
 void updateHammerButton() {
